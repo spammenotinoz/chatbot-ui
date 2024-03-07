@@ -106,8 +106,9 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
       setSelectedTools([])
       if (selectedWorkspace) {
         setChatSettings({
-          model: selectedWorkspace.default_model as LLMID,
-          prompt: selectedWorkspace.default_prompt,
+          //model: selectedWorkspace.default_model as LLMID,
+          model: 'gpt-3.5-turbo' as LLID
+		  prompt: selectedWorkspace.default_prompt,
           temperature: selectedWorkspace.default_temperature,
           contextLength: selectedWorkspace.default_context_length,
           includeProfileContext: selectedWorkspace.include_profile_context,
