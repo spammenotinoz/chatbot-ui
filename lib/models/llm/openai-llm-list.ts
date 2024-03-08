@@ -6,10 +6,10 @@ const OPENAI_PLATORM_LINK = "https://platform.openai.com/docs/overview"
 
 // GPT-4 Turbo (UPDATED 1/25/24)
 const GPT4Turbo: LLM = {
-  modelId: "gpt-4-turbo-preview",
+  modelId: "gpt-3.5-turbo",
   modelName: "GPT-4 Turbo",
   provider: "openai",
-  hostedId: "gpt-4-turbo-preview",
+  hostedId: "gpt-3.5-turbo",
   platformLink: OPENAI_PLATORM_LINK,
   imageInput: false
 }
@@ -29,7 +29,7 @@ const GPT4: LLM = {
   modelId: "gpt-4",
   modelName: "GPT-4",
   provider: "openai",
-  hostedId: "gpt-4-turbo-preview",
+  hostedId: "gpt-4",
   platformLink: OPENAI_PLATORM_LINK,
   imageInput: false
 }
