@@ -45,7 +45,7 @@ const GPT3_5Turbo: LLM = {
 }
 
 // GPT-3.5 Turbo (UPDATED 1/25/24)
-const GPT3_5Turbo: LLM = {
+const GPT3_5Turbo2: LLM = {
   modelId: "gpt-3.5-turbo",
   modelName: "GPT-3.5 Turbo",
   provider: "openai",
