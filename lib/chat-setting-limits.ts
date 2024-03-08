@@ -100,7 +100,7 @@ export const CHAT_SETTING_LIMITS: Record<LLMID, ChatSettingLimits> = {
     MIN_TEMPERATURE: 0.0,
     MAX_TEMPERATURE: 2.0,
     MAX_TOKEN_OUTPUT_LENGTH: 4096,
-    MAX_CONTEXT_LENGTH: 128000
+	MAX_CONTEXT_LENGTH: 8192 // (TODO: Change back to 128000 when cost is under control   
   },
   "gpt-4-vision-preview": {
     MIN_TEMPERATURE: 0.0,
