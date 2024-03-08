@@ -16,10 +16,10 @@ const GPT4Vision: LLM = {
 
 // GPT-4 (UPDATED 1/29/24)
 const GPT4: LLM = {
-  modelId: "gpt-4-turbo",
+  modelId: "gpt-4-turbo-preview",
   modelName: "GPT-4",
   provider: "openai",
-  hostedId: "gpt-4-turbo",
+  hostedId: "gpt-4-turbo-preview",
   platformLink: OPENAI_PLATORM_LINK,
   imageInput: false
 }
