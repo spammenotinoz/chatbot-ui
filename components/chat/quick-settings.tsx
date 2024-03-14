@@ -20,7 +20,6 @@ import {
 } from "../ui/dropdown-menu"
 import { Input } from "../ui/input"
 import { QuickSettingOption } from "./quick-setting-option"
-import { set } from "date-fns"
 
 interface QuickSettingsProps {}
 
@@ -41,8 +40,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
     assistantImages,
     setChatFiles,
     setSelectedTools,
-    setShowFilesDisplay,
-    selectedWorkspace
+    setShowFilesDisplay
   } = useContext(ChatbotUIContext)
 
   const inputRef = useRef<HTMLInputElement>(null)
@@ -60,14 +58,16 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
   }, [isOpen])
 
   const handleSelectQuickSetting = async (
-    item: Tables<"presets"> | Tables<"assistants"> | null,
-    contentType: "presets" | "assistants" | "remove"
+    item: Tables<"presets"> | Tables<"assistants">,
+    contentType: "presets" | "assistants"
   ) => {
-    console.log({ item, contentType })
-    if (contentType === "assistants" && item) {
+    if (contentType === "assistants") {
       setSelectedAssistant(item as Tables<"assistants">)
+
       setLoading(true)
+
       let allFiles = []
+
       const assistantFiles = (await getAssistantFilesByAssistantId(item.id))
         .files
       allFiles = [...assistantFiles]
@@ -82,6 +82,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
       }
       const assistantTools = (await getAssistantToolsByAssistantId(item.id))
         .tools
+
       setSelectedTools(assistantTools)
       setChatFiles(
         allFiles.map(file => ({
@@ -91,34 +92,15 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
           file: null
         }))
       )
+
       if (allFiles.length > 0) setShowFilesDisplay(true)
+
       setLoading(false)
+
       setSelectedPreset(null)
-    } else if (contentType === "presets" && item) {
+    } else if (contentType === "presets") {
       setSelectedPreset(item as Tables<"presets">)
       setSelectedAssistant(null)
-      setChatFiles([])
-      setSelectedTools([])
-    } else {
-      setSelectedPreset(null)
-      setSelectedAssistant(null)
-      setChatFiles([])
-      setSelectedTools([])
-      if (selectedWorkspace) {
-        setChatSettings({
-          model: selectedWorkspace.default_model as LLMID,
-          prompt: selectedWorkspace.default_prompt,
-          temperature: selectedWorkspace.default_temperature,
-          contextLength: selectedWorkspace.default_context_length,
-          includeProfileContext: selectedWorkspace.include_profile_context,
-          includeWorkspaceInstructions:
-            selectedWorkspace.include_workspace_instructions,
-          embeddingsProvider: selectedWorkspace.embeddings_provider as
-            | "openai"
-            | "local"
-        })
-      }
-      return
     }
 
     setChatSettings({
@@ -136,18 +118,20 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
     if (!chatSettings) return false
 
     if (selectedPreset) {
-      return (
+      if (
         selectedPreset.include_profile_context !==
-          chatSettings?.includeProfileContext ||
+          chatSettings.includeProfileContext ||
         selectedPreset.include_workspace_instructions !==
           chatSettings.includeWorkspaceInstructions ||
         selectedPreset.context_length !== chatSettings.contextLength ||
         selectedPreset.model !== chatSettings.model ||
         selectedPreset.prompt !== chatSettings.prompt ||
         selectedPreset.temperature !== chatSettings.temperature
-      )
+      ) {
+        return true
+      }
     } else if (selectedAssistant) {
-      return (
+      if (
         selectedAssistant.include_profile_context !==
           chatSettings.includeProfileContext ||
         selectedAssistant.include_workspace_instructions !==
@@ -156,7 +140,9 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
         selectedAssistant.model !== chatSettings.model ||
         selectedAssistant.prompt !== chatSettings.prompt ||
         selectedAssistant.temperature !== chatSettings.temperature
-      )
+      ) {
+        return true
+      }
     }
 
     return false
@@ -264,7 +250,8 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
                     | Tables<"assistants">)
                 }
                 onSelect={() => {
-                  handleSelectQuickSetting(null, "remove")
+                  setSelectedPreset(null)
+                  setSelectedAssistant(null)
                 }}
                 image={selectedPreset ? "" : selectedAssistantImage}
               />

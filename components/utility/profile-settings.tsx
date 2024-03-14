@@ -109,7 +109,6 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
   const [mistralAPIKey, setMistralAPIKey] = useState(
     profile?.mistral_api_key || ""
   )
-  const [groqAPIKey, setGroqAPIKey] = useState(profile?.groq_api_key || "")
   const [perplexityAPIKey, setPerplexityAPIKey] = useState(
     profile?.perplexity_api_key || ""
   )
@@ -148,7 +147,6 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
       anthropic_api_key: anthropicAPIKey,
       google_gemini_api_key: googleGeminiAPIKey,
       mistral_api_key: mistralAPIKey,
-      groq_api_key: groqAPIKey,
       perplexity_api_key: perplexityAPIKey,
       use_azure_openai: useAzureOpenai,
       azure_openai_api_key: azureOpenaiAPIKey,
@@ -170,7 +168,6 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
       "azure",
       "anthropic",
       "mistral",
-      "groq",
       "perplexity",
       "openrouter"
     ]
@@ -336,6 +333,7 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
           <Tabs defaultValue="profile">
             <TabsList className="mt-4 grid w-full grid-cols-2">
               <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="keys">API Keys</TabsTrigger>
             </TabsList>
 
             <TabsContent className="mt-4 space-y-4" value="profile">
@@ -676,22 +674,6 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
               </div>
 
               <div className="space-y-1">
-                {envKeyMap["groq"] ? (
-                  <Label>Groq API key set by admin.</Label>
-                ) : (
-                  <>
-                    <Label>Groq API Key</Label>
-                    <Input
-                      placeholder="Groq API Key"
-                      type="password"
-                      value={groqAPIKey}
-                      onChange={e => setGroqAPIKey(e.target.value)}
-                    />
-                  </>
-                )}
-              </div>
-
-              <div className="space-y-1">
                 {envKeyMap["perplexity"] ? (
                   <Label>Perplexity API key set by admin.</Label>
                 ) : (
@@ -733,7 +715,7 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
             <WithTooltip
               display={
                 <div>
-                  Download data as JSON. Import coming soon!
+                  Download Chatbot UI 1.0 data as JSON. Import coming soon!
                 </div>
               }
               trigger={
