@@ -21,8 +21,7 @@ export async function POST(request: Request) {
 
     const openai = new OpenAI({
       apiKey: profile.openai_api_key || "",
-      organization: profile.openai_organization_id,
-	  ...(process.env.ENDPOINT_OPENAI && { baseURL: process.env.ENDPOINT_OPENAI })
+      organization: profile.openai_organization_id
     })
 
     let allTools: OpenAI.Chat.Completions.ChatCompletionTool[] = []

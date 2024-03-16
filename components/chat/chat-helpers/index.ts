@@ -52,9 +52,7 @@ export const validateChatSettings = (
 }
 
 export const handleRetrieval = async (
-  messageContent: string,
-  prompt: string,
-  chatMessages: ChatMessage[],
+  userInput: string,
   newMessageFiles: ChatFile[],
   chatFiles: ChatFile[],
   embeddingsProvider: "openai" | "local",
@@ -63,9 +61,7 @@ export const handleRetrieval = async (
   const response = await fetch("/api/retrieval/retrieve", {
     method: "POST",
     body: JSON.stringify({
-      messageContent,
-      prompt,
-      chatMessages,
+      userInput,
       fileIds: [...newMessageFiles, ...chatFiles].map(file => file.id),
       embeddingsProvider,
       sourceCount

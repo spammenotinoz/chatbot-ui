@@ -145,8 +145,7 @@ export const useChatHandler = () => {
       if (allFiles.length > 0) setShowFilesDisplay(true)
     } else if (selectedPreset) {
       setChatSettings({
-        //model: selectedPreset.model as LLMID,
-		model: 'claude-3-haiku-20240307',
+        model: selectedPreset.model as LLMID,
         prompt: selectedPreset.prompt,
         temperature: selectedPreset.temperature,
         contextLength: selectedPreset.context_length,
@@ -241,9 +240,7 @@ export const useChatHandler = () => {
         setToolInUse("retrieval")
 
         retrievedFileItems = await handleRetrieval(
-          messageContent,
-          chatSettings!.prompt,
-          chatMessages,
+          userInput,
           newMessageFiles,
           chatFiles,
           chatSettings!.embeddingsProvider,

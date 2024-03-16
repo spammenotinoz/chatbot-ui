@@ -1,25 +1,13 @@
-import { rephraser } from "@/lib/retrieve/rephraser"
-import { reranker } from "@/lib/retrieve/reranker"
-import { retriever } from "@/lib/retrieve/retriever"
+import { generateLocalEmbedding } from "@/lib/generate-local-embedding"
 import { checkApiKey, getServerProfile } from "@/lib/server/server-chat-helpers"
 import { Database } from "@/supabase/types"
-import { ChatMessage } from "@/types"
 import { createClient } from "@supabase/supabase-js"
 import OpenAI from "openai"
 
 export async function POST(request: Request) {
   const json = await request.json()
-  const {
-    messageContent,
-    prompt,
-    chatMessages,
-    fileIds,
-    embeddingsProvider,
-    sourceCount
-  } = json as {
-    messageContent: string
-    prompt: string
-    chatMessages: ChatMessage[]
+  const { userInput, fileIds, embeddingsProvider, sourceCount } = json as {
+    userInput: string
     fileIds: string[]
     embeddingsProvider: "openai" | "local"
     sourceCount: number
@@ -43,6 +31,8 @@ export async function POST(request: Request) {
       }
     }
 
+    let chunks: any[] = []
+
     let openai
     if (profile.use_azure_openai) {
       openai = new OpenAI({
@@ -58,54 +48,51 @@ export async function POST(request: Request) {
       })
     }
 
-    let rephrasedUserInput: string | null | undefined = null
-    if (process.env.REPHRASER_ENABLED === "true") {
-      rephrasedUserInput = await rephraser(
-        openai,
-        process.env.REPHRASER_MODEL_ID || "gpt-3.5-turbo-0125",
-        messageContent,
-        prompt,
-        process.env.RAPHRASER_MODE as any,
-        chatMessages,
-        parseInt(process.env.REPHRASER_MAX_HISTORY_MESSAGES || "3"),
-        parseInt(process.env.REPHRASER_MAX_HISTORY_TOKENS || "2048")
-      )
-    }
-
-    const rerankerEnabled = process.env.RERANKER_ENABLED === "true"
-
-    const mostSimilarChunks = await retriever(
-      supabaseAdmin,
-      openai,
-      embeddingsProvider,
-      rephrasedUserInput || messageContent,
-      rerankerEnabled
-        ? parseInt(process.env.RERANKER_QUANTITY_ANALIZED || "12")
-        : sourceCount,
-      uniqueFileIds
-    )
-
-    if (rerankerEnabled) {
-      const researchResults = await reranker(
-        openai,
-        messageContent,
-        rephrasedUserInput || messageContent,
-        mostSimilarChunks,
-        sourceCount,
-        process.env.RERANKER_MODEL_ID as any,
-        parseInt(process.env.RERANKER_MAX_CONTEXT_SIZE || "16000")
-      )
-
-      return new Response(JSON.stringify({ results: researchResults }), {
-        status: 200
+    if (embeddingsProvider === "openai") {
+      const response = await openai.embeddings.create({
+        model: "text-embedding-3-small",
+        input: userInput
       })
+
+      const openaiEmbedding = response.data.map(item => item.embedding)[0]
+
+      const { data: openaiFileItems, error: openaiError } =
+        await supabaseAdmin.rpc("match_file_items_openai", {
+          query_embedding: openaiEmbedding as any,
+          match_count: sourceCount,
+          file_ids: uniqueFileIds
+        })
+
+      if (openaiError) {
+        throw openaiError
+      }
+
+      chunks = openaiFileItems
+    } else if (embeddingsProvider === "local") {
+      const localEmbedding = await generateLocalEmbedding(userInput)
+
+      const { data: localFileItems, error: localFileItemsError } =
+        await supabaseAdmin.rpc("match_file_items_local", {
+          query_embedding: localEmbedding as any,
+          match_count: sourceCount,
+          file_ids: uniqueFileIds
+        })
+
+      if (localFileItemsError) {
+        throw localFileItemsError
+      }
+
+      chunks = localFileItems
     }
+
+    const mostSimilarChunks = chunks?.sort(
+      (a, b) => b.similarity - a.similarity
+    )
 
     return new Response(JSON.stringify({ results: mostSimilarChunks }), {
       status: 200
     })
   } catch (error: any) {
-    console.log("Error retrieving research", error)
     const errorMessage = error.error?.message || "An unexpected error occurred"
     const errorCode = error.status || 500
     return new Response(JSON.stringify({ message: errorMessage }), {
