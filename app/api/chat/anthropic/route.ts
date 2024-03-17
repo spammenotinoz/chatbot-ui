@@ -5,7 +5,7 @@ import Anthropic from "@anthropic-ai/sdk"
 import { AnthropicStream, StreamingTextResponse } from "ai"
 
 export const config = {
-	runtime: 'experimental-edge',
+	runtime: 'edge',
 };
 
 export async function POST(request: Request) {
