@@ -4,13 +4,9 @@ import { ChatSettings } from "@/types";
 import Anthropic from "@anthropic-ai/sdk";
 import { AnthropicStream, StreamingTextResponse } from "ai";
 
-export const runtime = "edge"
+export const runtime = "edge";
 
-export default async function handler(request: Request) {
-  if (request.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
-  }
-
+export async function POST(request: Request) {
   const json = await request.json();
   const { chatSettings, messages } = json as {
     chatSettings: ChatSettings;
