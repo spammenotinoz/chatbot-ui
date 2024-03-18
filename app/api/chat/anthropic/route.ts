@@ -5,6 +5,10 @@ import Anthropic from "@anthropic-ai/sdk"
 import { AnthropicStream, StreamingTextResponse } from "ai"
 import { NextRequest, NextResponse } from "next/server"
 
+export const config = {
+  runtime: 'edge',
+};
+
 export async function POST(request: NextRequest) {
   const json = await request.json()
   const { chatSettings, messages } = json as {
