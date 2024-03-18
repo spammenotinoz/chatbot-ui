@@ -104,7 +104,7 @@ export async function POST(req: Request) {
       openai = new OpenAI({
         apiKey: profile.openai_api_key || "",
         organization: profile.openai_organization_id,
-		baseURL: "https://api.openai.com/v1/embeddings"
+		baseURL: 'https://api.openai.com/v1/embeddings'
 		//...(process.env.ENDPOINT_OPENAI && { baseURL: process.env.ENDPOINT_OPENAI })
       })
     }
