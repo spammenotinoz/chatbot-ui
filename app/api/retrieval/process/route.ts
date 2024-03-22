@@ -103,8 +103,7 @@ export async function POST(req: Request) {
     } else {
       openai = new OpenAI({
         apiKey: profile.openai_api_key || "",
-        organization: profile.openai_organization_id,
-		//...(process.env.ENDPOINT_OPENAI && { baseURL: process.env.ENDPOINT_OPENAI })
+        organization: profile.openai_organization_id
       })
     }
 
