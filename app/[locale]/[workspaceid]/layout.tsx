@@ -156,7 +156,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
     setModels(modelData.models)
 
     setChatSettings({
-      model: (workspace?.default_model || "gpt-4-1106-preview") as LLMID,
+      model: 'claude-3-haiku-20240307',
       prompt:
         workspace?.default_prompt ||
         "You are a friendly, helpful AI assistant.",
