@@ -1,121 +1,89 @@
-import { generateLocalEmbedding } from "@/lib/generate-local-embedding"
-import { processDocX } from "@/lib/retrieval/processing"
-import { checkApiKey, getServerProfile } from "@/lib/server/server-chat-helpers"
-import { Database } from "@/supabase/types"
-import { FileItemChunk } from "@/types"
-import { createClient } from "@supabase/supabase-js"
-import { NextResponse } from "next/server"
-import OpenAI from "openai"
+import { createClient } from "@supabase/supabase-js";
+import { createParser } from "eventsource-parser";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { Configuration, OpenAIApi } from "openai";
 
-export async function POST(req: Request) {
-  const json = await req.json()
-  const { text, fileId, embeddingsProvider, fileExtension } = json as {
-    text: string
-    fileId: string
-    embeddingsProvider: "openai" | "local"
-    fileExtension: string
-  }
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseAdmin = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-  try {
-    const supabaseAdmin = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
+  },
+};
 
-    const profile = await getServerProfile()
+export default async function handler(req, res) {
+  if (req.method === "POST") {
+    const { file_id, embeddingsProvider } = req.body;
 
-    if (embeddingsProvider === "openai") {
-      if (profile.use_azure_openai) {
-        checkApiKey(profile.azure_openai_api_key, "Azure OpenAI")
-      } else {
-        checkApiKey(profile.openai_api_key, "OpenAI")
+    try {
+      const { data: fileMetadata, error: metadataError, count } = await supabaseAdmin
+        .from("files")
+        .select("*", { count: "exact" })
+        .eq("id", file_id)
+        .single();
+
+      if (metadataError) {
+        throw new Error(`Failed to retrieve file metadata: ${metadataError.message}`);
       }
-    }
 
-    let chunks: FileItemChunk[] = []
+      if (count === 0) {
+        throw new Error("File not found");
+      } else if (count > 1) {
+        throw new Error("Multiple files found with the same ID");
+      }
 
-    switch (fileExtension) {
-      case "docx":
-        chunks = await processDocX(text)
-        break
-      default:
-        return new NextResponse("Unsupported file type", {
-          status: 400
-        })
-    }
+      const { data, error } = await supabase.storage
+        .from("files")
+        .download(`${fileMetadata.path}`);
 
-    let embeddings: any = []
+      if (error) {
+        throw new Error(`Failed to download file: ${error.message}`);
+      }
 
-    let openai
-    if (profile.use_azure_openai) {
-      openai = new OpenAI({
-        apiKey: profile.azure_openai_api_key || "",
-        baseURL: `${profile.azure_openai_endpoint}/openai/deployments/${profile.azure_openai_embeddings_id}`,
-        defaultQuery: { "api-version": "2023-12-01-preview" },
-        defaultHeaders: { "api-key": profile.azure_openai_api_key }
-      })
-    } else {
-      openai = new OpenAI({
-        apiKey: profile.openai_api_key || "",
-        organization: profile.openai_organization_id
-      })
-    }
+      const fileExtension = fileMetadata.name.split(".").pop();
 
-    if (embeddingsProvider === "openai") {
-      const response = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: chunks.map(chunk => chunk.content)
-      })
+      if (["csv", "json", "md", "pdf", "txt"].includes(fileExtension)) {
+        const fileContent = data;
+        let embeddings;
 
-      embeddings = response.data.map((item: any) => {
-        return item.embedding
-      })
-    } else if (embeddingsProvider === "local") {
-      const embeddingPromises = chunks.map(async chunk => {
-        try {
-          return await generateLocalEmbedding(chunk.content)
-        } catch (error) {
-          console.error(`Error generating embedding for chunk: ${chunk}`, error)
-          return null
+        if (embeddingsProvider === "openai") {
+          const configuration = new Configuration({
+            apiKey: process.env.OPENAI_API_KEY,
+          });
+          const openai = new OpenAIApi(configuration);
+          const embeddingResponse = await openai.createEmbedding({
+            model: "text-embedding-ada-002",
+            input: fileContent,
+          });
+          embeddings = embeddingResponse.data.data[0].embedding;
+        } else {
+          // Handle other embedding providers
         }
-      })
 
-      embeddings = await Promise.all(embeddingPromises)
+        const { error: updateError } = await supabaseAdmin
+          .from("files")
+          .update({ embeddings })
+          .eq("id", file_id);
+
+        if (updateError) {
+          throw new Error(`Failed to update file embeddings: ${updateError.message}`);
+        }
+
+        res.status(200).json({ message: "File processed successfully" });
+      } else {
+        res.status(400).json({ error: "Unsupported file type" });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
     }
-
-    const file_items = chunks.map((chunk, index) => ({
-      file_id: fileId,
-      user_id: profile.user_id,
-      content: chunk.content,
-      tokens: chunk.tokens,
-      openai_embedding:
-        embeddingsProvider === "openai"
-          ? ((embeddings[index] || null) as any)
-          : null,
-      local_embedding:
-        embeddingsProvider === "local"
-          ? ((embeddings[index] || null) as any)
-          : null
-    }))
-
-    await supabaseAdmin.from("file_items").upsert(file_items)
-
-    const totalTokens = file_items.reduce((acc, item) => acc + item.tokens, 0)
-
-    await supabaseAdmin
-      .from("files")
-      .update({ tokens: totalTokens })
-      .eq("id", fileId)
-
-    return new NextResponse("Embed Successful", {
-      status: 200
-    })
-  } catch (error: any) {
-    console.error(error)
-    const errorMessage = error.error?.message || "An unexpected error occurred"
-    const errorCode = error.status || 500
-    return new Response(JSON.stringify({ message: errorMessage }), {
-      status: errorCode
-    })
+  } else {
+    res.status(405).json({ error: "Method not allowed" });
   }
 }
