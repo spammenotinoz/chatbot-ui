@@ -19,26 +19,32 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+
     const profile = await getServerProfile()
+
     const formData = await req.formData()
+
     const file_id = formData.get("file_id") as string
     const embeddingsProvider = formData.get("embeddingsProvider") as string
 
-    const { data: fileMetadata, error: metadataError } = await supabaseAdmin
+    const { data: filesMetadata, error: metadataError } = await supabaseAdmin
       .from("files")
       .select("*")
       .eq("id", file_id)
-      .single()
 
     if (metadataError) {
-      throw new Error(
-        `Failed to retrieve file metadata: ${metadataError.message}`
-      )
+      throw new Error(`Failed to retrieve file metadata: ${metadataError.message}`)
     }
 
-    if (!fileMetadata) {
+    if (filesMetadata.length === 0) {
       throw new Error("File not found")
     }
+
+    if (filesMetadata.length > 1) {
+      throw new Error("Multiple files found with the same ID")
+    }
+
+    const fileMetadata = filesMetadata[0];
 
     if (fileMetadata.user_id !== profile.user_id) {
       throw new Error("Unauthorized")
@@ -48,8 +54,13 @@ export async function POST(req: Request) {
       .from("files")
       .download(fileMetadata.file_path)
 
-    if (fileError)
+    if (fileError) {
       throw new Error(`Failed to retrieve file: ${fileError.message}`)
+    }
+
+    const fileBuffer = Buffer.from(await file.arrayBuffer())
+    const blob = new Blob([fileBuffer])
+    const fileExtension = fileMetadata.name.split(".").pop()?.toLowerCase()
 
     const fileBuffer = Buffer.from(await file.arrayBuffer())
     const blob = new Blob([fileBuffer])
@@ -64,6 +75,7 @@ export async function POST(req: Request) {
     }
 
     let chunks: FileItemChunk[] = []
+
     switch (fileExtension) {
       case "csv":
         chunks = await processCSV(blob)
@@ -87,6 +99,7 @@ export async function POST(req: Request) {
     }
 
     let embeddings: any = []
+
     let openai
     if (profile.use_azure_openai) {
       openai = new OpenAI({
@@ -99,16 +112,17 @@ export async function POST(req: Request) {
       openai = new OpenAI({
         apiKey: profile.openai_api_key || "",
         organization: profile.openai_organization_id,
-        baseURL: undefined
-        //...(process.env.ENDPOINT_OPENAI && { baseURL: process.env.ENDPOINT_OPENAI })
+		baseURL: undefined
+		//...(process.env.ENDPOINT_OPENAI && { baseURL: process.env.ENDPOINT_OPENAI })
       })
     }
 
     if (embeddingsProvider === "openai") {
       const response = await openai.embeddings.create({
-        model: "text-embedding-ada-002",
+        model: "text-embedding-3-small",
         input: chunks.map(chunk => chunk.content)
       })
+
       embeddings = response.data.map((item: any) => {
         return item.embedding
       })
@@ -118,9 +132,11 @@ export async function POST(req: Request) {
           return await generateLocalEmbedding(chunk.content)
         } catch (error) {
           console.error(`Error generating embedding for chunk: ${chunk}`, error)
+
           return null
         }
       })
+
       embeddings = await Promise.all(embeddingPromises)
     }
 
@@ -142,6 +158,7 @@ export async function POST(req: Request) {
     await supabaseAdmin.from("file_items").upsert(file_items)
 
     const totalTokens = file_items.reduce((acc, item) => acc + item.tokens, 0)
+
     await supabaseAdmin
       .from("files")
       .update({ tokens: totalTokens })
