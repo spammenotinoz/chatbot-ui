@@ -24,47 +24,13 @@ export async function POST(req: Request) {
 
     const formData = await req.formData()
 
+    const file = formData.get("file") as File
     const file_id = formData.get("file_id") as string
     const embeddingsProvider = formData.get("embeddingsProvider") as string
 
-    const { data: filesMetadata, error: metadataError } = await supabaseAdmin
-      .from("files")
-      .select("*")
-      .eq("id", file_id)
-
-    if (metadataError) {
-      throw new Error(`Failed to retrieve file metadata: ${metadataError.message}`)
-    }
-
-    if (filesMetadata.length === 0) {
-      throw new Error("File not found")
-    }
-
-    if (filesMetadata.length > 1) {
-      throw new Error("Multiple files found with the same ID")
-    }
-
-    const fileMetadata = filesMetadata[0];
-
-    if (fileMetadata.user_id !== profile.user_id) {
-      throw new Error("Unauthorized")
-    }
-
-    const { data: file, error: fileError } = await supabaseAdmin.storage
-      .from("files")
-      .download(fileMetadata.file_path)
-
-    if (fileError) {
-      throw new Error(`Failed to retrieve file: ${fileError.message}`)
-    }
-
     const fileBuffer = Buffer.from(await file.arrayBuffer())
     const blob = new Blob([fileBuffer])
-    const fileExtension = fileMetadata.name.split(".").pop()?.toLowerCase()
-
-    const fileBuffer = Buffer.from(await file.arrayBuffer())
-    const blob = new Blob([fileBuffer])
-    const fileExtension = fileMetadata.name.split(".").pop()?.toLowerCase()
+    const fileExtension = file.name.split(".").pop()?.toLowerCase()
 
     if (embeddingsProvider === "openai") {
       if (profile.use_azure_openai) {
@@ -111,9 +77,7 @@ export async function POST(req: Request) {
     } else {
       openai = new OpenAI({
         apiKey: profile.openai_api_key || "",
-        organization: profile.openai_organization_id,
-		baseURL: undefined
-		//...(process.env.ENDPOINT_OPENAI && { baseURL: process.env.ENDPOINT_OPENAI })
+        organization: profile.openai_organization_id
       })
     }
 
