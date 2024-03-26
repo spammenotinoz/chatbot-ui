@@ -10,9 +10,11 @@ export const getFileById = async (fileId: string) => {
     .select("*")
     .eq("id", fileId)
     .single()
+
   if (!file) {
     throw new Error(error.message)
   }
+
   return file
 }
 
@@ -28,9 +30,11 @@ export const getFileWorkspacesByWorkspaceId = async (workspaceId: string) => {
     )
     .eq("id", workspaceId)
     .single()
+
   if (!workspace) {
     throw new Error(error.message)
   }
+
   return workspace
 }
 
@@ -46,9 +50,11 @@ export const getFileWorkspacesByFileId = async (fileId: string) => {
     )
     .eq("id", fileId)
     .single()
+
   if (!file) {
     throw new Error(error.message)
   }
+
   return file
 }
 
@@ -59,11 +65,13 @@ export const createFileBasedOnExtension = async (
   embeddingsProvider: "openai" | "local"
 ) => {
   const fileExtension = file.name.split(".").pop()
+
   if (fileExtension === "docx") {
     const arrayBuffer = await file.arrayBuffer()
     const result = await mammoth.extractRawText({
       arrayBuffer
     })
+
     return createDocXFile(
       result.value,
       file,
@@ -83,52 +91,53 @@ export const createFile = async (
   workspace_id: string,
   embeddingsProvider: "openai" | "local"
 ) => {
-  let validFilename = fileRecord.name.replace(/[^a-z0-9.]/gi, "_").toLowerCase()
-  const extension = validFilename.split(".").pop()
-  const baseName = validFilename.substring(0, validFilename.lastIndexOf("."))
-  const maxBaseNameLength = 100 - (extension?.length || 0) - 1
-  if (baseName.length > maxBaseNameLength) {
-    validFilename = baseName.substring(0, maxBaseNameLength) + "." + extension
-  }
-  fileRecord.name = validFilename
   const { data: createdFile, error } = await supabase
     .from("files")
     .insert([fileRecord])
     .select("*")
     .single()
+
   if (error) {
     throw new Error(error.message)
   }
+
   await createFileWorkspace({
     user_id: createdFile.user_id,
     file_id: createdFile.id,
     workspace_id
   })
+
   const filePath = await uploadFile(file, {
     name: createdFile.name,
     user_id: createdFile.user_id,
     file_id: createdFile.name
   })
+
   await updateFile(createdFile.id, {
     file_path: filePath
   })
+
   const formData = new FormData()
+  formData.append("file", file)
   formData.append("file_id", createdFile.id)
   formData.append("embeddingsProvider", embeddingsProvider)
+
   const response = await fetch("/api/retrieval/process", {
     method: "POST",
     body: formData
   })
+
   if (!response.ok) {
     toast.error("Failed to process file.")
     await deleteFile(createdFile.id)
-    throw new Error("Failed to process file.")
   }
+
   const fetchedFile = await getFileById(createdFile.id)
+
   return fetchedFile
 }
 
-// Handle docx files
+// // Handle docx files
 export const createDocXFile = async (
   text: string,
   file: File,
@@ -141,22 +150,27 @@ export const createDocXFile = async (
     .insert([fileRecord])
     .select("*")
     .single()
+
   if (error) {
     throw new Error(error.message)
   }
+
   await createFileWorkspace({
     user_id: createdFile.user_id,
     file_id: createdFile.id,
     workspace_id
   })
+
   const filePath = await uploadFile(file, {
     name: createdFile.name,
     user_id: createdFile.user_id,
     file_id: createdFile.name
   })
+
   await updateFile(createdFile.id, {
     file_path: filePath
   })
+
   const response = await fetch("/api/retrieval/process/docx", {
     method: "POST",
     headers: {
@@ -169,12 +183,14 @@ export const createDocXFile = async (
       fileExtension: "docx"
     })
   })
+
   if (!response.ok) {
     toast.error("Failed to process file.")
     await deleteFile(createdFile.id)
-    throw new Error("Failed to process file.")
   }
+
   const fetchedFile = await getFileById(createdFile.id)
+
   return fetchedFile
 }
 
@@ -186,9 +202,11 @@ export const createFiles = async (
     .from("files")
     .insert(files)
     .select("*")
+
   if (error) {
     throw new Error(error.message)
   }
+
   await createFileWorkspaces(
     createdFiles.map(file => ({
       user_id: file.user_id,
@@ -196,6 +214,7 @@ export const createFiles = async (
       workspace_id
     }))
   )
+
   return createdFiles
 }
 
@@ -209,9 +228,11 @@ export const createFileWorkspace = async (item: {
     .insert([item])
     .select("*")
     .single()
+
   if (error) {
     throw new Error(error.message)
   }
+
   return createdFileWorkspace
 }
 
@@ -222,7 +243,9 @@ export const createFileWorkspaces = async (
     .from("file_workspaces")
     .insert(items)
     .select("*")
+
   if (error) throw new Error(error.message)
+
   return createdFileWorkspaces
 }
 
@@ -236,17 +259,21 @@ export const updateFile = async (
     .eq("id", fileId)
     .select("*")
     .single()
+
   if (error) {
     throw new Error(error.message)
   }
+
   return updatedFile
 }
 
 export const deleteFile = async (fileId: string) => {
   const { error } = await supabase.from("files").delete().eq("id", fileId)
+
   if (error) {
     throw new Error(error.message)
   }
+
   return true
 }
 
@@ -259,6 +286,8 @@ export const deleteFileWorkspace = async (
     .delete()
     .eq("file_id", fileId)
     .eq("workspace_id", workspaceId)
+
   if (error) throw new Error(error.message)
+
   return true
 }
