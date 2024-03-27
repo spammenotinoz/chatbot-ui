@@ -201,7 +201,7 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
           <Tabs defaultValue="main">
             <TabsList className="mt-4 grid w-full grid-cols-2">
               <TabsTrigger value="main">Main</TabsTrigger>
-              <TabsTrigger value="defaults">Defaults</TabsTrigger>
+//              <TabsTrigger value="defaults">Defaults</TabsTrigger>
             </TabsList>
 
             <TabsContent className="mt-4 space-y-4" value="main">
@@ -261,16 +261,16 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
               </div>
             </TabsContent>
 
-            <TabsContent className="mt-5" value="defaults">
-              <div className="mb-4 text-sm">
-                These are the settings your workspace begins with when selected.
-              </div>
+//            <TabsContent className="mt-5" value="defaults">
+//              <div className="mb-4 text-sm">
+//                These are the settings your workspace begins with when selected.
+//              </div>
 
-              <ChatSettingsForm
-                chatSettings={defaultChatSettings as any}
-                onChangeChatSettings={setDefaultChatSettings}
-              />
-            </TabsContent>
+//              <ChatSettingsForm
+//                chatSettings={defaultChatSettings as any}
+//                onChangeChatSettings={setDefaultChatSettings}
+//              />
+//            </TabsContent>
           </Tabs>
         </div>
 
