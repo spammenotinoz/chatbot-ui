@@ -161,7 +161,17 @@ export const ModelSelect: FC<ModelSelectProps> = ({
               .filter(model =>
                 model.modelName.toLowerCase().includes(search.toLowerCase())
               )
-              .sort((a, b) => a.provider.localeCompare(b.provider))
+              .filter(model => !model.modelName.startsWith("openai/"))
+			  .filter(model => !model.modelName.startsWith("perplexity/pplx"))
+			  .filter(model => !model.modelName.startsWith("anthropic/"))	  			  
+			  .filter(model => !model.modelName.startsWith("mistralai/"))
+			  .filter(model => model.modelName !== "GPT-4")
+			  .filter(model => model.modelName !== "google/gemini-pro-vision")
+			  .filter(model => model.modelName !== "Sonar Small Online")
+			  .filter(model => model.modelName !== "Sonar Medium Online")			  
+			  .filter(model => !model.modelName.toLowerCase().includes("opus"))
+			  .filter(model => !model.modelName.toLowerCase().includes("beta"))
+			  .sort((a, b) => a.provider.localeCompare(b.provider))
 
             if (filteredModels.length === 0) return null
 
@@ -170,7 +180,9 @@ export const ModelSelect: FC<ModelSelectProps> = ({
                 <div className="mb-1 ml-2 text-xs font-bold tracking-wide opacity-50">
                   {provider === "openai" && profile.use_azure_openai
                     ? "AZURE OPENAI"
-                    : provider.toLocaleUpperCase()}
+					: provider === "openrouter" // Check if the provider is "openrouter"
+					? "Other providers" // Display "Other providers" if true
+					: provider.toLocaleUpperCase()}
                 </div>
 
                 <div className="mb-4">
