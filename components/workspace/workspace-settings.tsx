@@ -238,7 +238,7 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
 //                    height={50}
 //                  />
 //                </div>
-//              </>
+              </>
 
               <div className="space-y-1">
                 <Label>
