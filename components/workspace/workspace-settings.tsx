@@ -227,16 +227,16 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
                 </div> */}
 
                 <div className="space-y-1">
-                  <Label>Workspace Image</Label>
+//                  <Label>Workspace Image</Label>
 
-                  <ImagePicker
-                    src={imageLink}
-                    image={selectedImage}
-                    onSrcChange={setImageLink}
-                    onImageChange={setSelectedImage}
-                    width={50}
-                    height={50}
-                  />
+//                  <ImagePicker
+//                    src={imageLink}
+//                    image={selectedImage}
+//                    onSrcChange={setImageLink}
+//                    onImageChange={setSelectedImage}
+//                    width={50}
+//                    height={50}
+//                  />
                 </div>
               </>
 
