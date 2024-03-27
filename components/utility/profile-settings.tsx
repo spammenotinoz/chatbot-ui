@@ -336,7 +336,6 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
           <Tabs defaultValue="profile">
             <TabsList className="mt-4 grid w-full grid-cols-2">
               <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="keys">API Keys</TabsTrigger>
             </TabsList>
 
             <TabsContent className="mt-4 space-y-4" value="profile">
@@ -734,7 +733,7 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
             <WithTooltip
               display={
                 <div>
-                  Download Chatbot UI 1.0 data as JSON. Import coming soon!
+                  Download data as JSON. Import coming soon!
                 </div>
               }
               trigger={
