@@ -201,7 +201,7 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
           <Tabs defaultValue="main">
             <TabsList className="mt-4 grid w-full grid-cols-2">
               <TabsTrigger value="main">Main</TabsTrigger>
-              <TabsTrigger value="defaults">Defaults</TabsTrigger>
+//              <TabsTrigger value="defaults">Defaults</TabsTrigger>
             </TabsList>
 
             <TabsContent className="mt-4 space-y-4" value="main">
@@ -226,19 +226,19 @@ export const WorkspaceSettings: FC<WorkspaceSettingsProps> = ({}) => {
                   />
                 </div> */}
 
-                <div className="space-y-1">
-                  <Label>Workspace Image</Label>
-
-                  <ImagePicker
-                    src={imageLink}
-                    image={selectedImage}
-                    onSrcChange={setImageLink}
-                    onImageChange={setSelectedImage}
-                    width={50}
-                    height={50}
-                  />
-                </div>
-              </>
+//                <div className="space-y-1">
+//                  <Label>Workspace Image</Label>
+//
+//                  <ImagePicker
+//                    src={imageLink}
+//                    image={selectedImage}
+//                    onSrcChange={setImageLink}
+//                    onImageChange={setSelectedImage}
+//                    width={50}
+//                    height={50}
+//                  />
+//                </div>
+//              </>
 
               <div className="space-y-1">
                 <Label>
