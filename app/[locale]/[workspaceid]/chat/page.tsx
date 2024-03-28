@@ -33,6 +33,10 @@ export default function ChatPage() {
           </div>
 
           <div className="absolute left-2 top-2">
+            <QuickSettings />
+          </div>
+
+          <div className="absolute right-2 top-2">
             <ChatSettings />
           </div>
 
@@ -42,7 +46,9 @@ export default function ChatPage() {
             <ChatInput />
           </div>
 
-          
+          <div className="absolute bottom-2 right-2 hidden md:block lg:bottom-4 lg:right-4">
+            <ChatHelp />
+          </div>
         </div>
       ) : (
         <ChatUI />
