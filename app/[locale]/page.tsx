@@ -31,6 +31,14 @@ export default function HomePage() {
 	  
 	  <Link
         className="mt-4 flex w-[200px] items-center justify-center rounded-md bg-blue-500 p-2 font-semibold"
+        href="https://mj.ultimateai.org/"
+      >
+        Midjourney (Beta)
+        <IconArrowRight className="ml-1" size={20} />
+      </Link>
+	  
+	  <Link
+        className="mt-4 flex w-[200px] items-center justify-center rounded-md bg-blue-500 p-2 font-semibold"
         href="https://imagine.ultimateai.org/"
       >
         Midjourney
