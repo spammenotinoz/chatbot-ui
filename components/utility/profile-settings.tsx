@@ -386,20 +386,7 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label>Profile Image</Label>
-
-                <ImagePicker
-                  src={profileImageSrc}
-                  image={profileImageFile}
-                  height={50}
-                  width={50}
-                  onSrcChange={setProfileImageSrc}
-                  onImageChange={setProfileImageFile}
-                />
-              </div>
-
-              <div className="space-y-1">
+                            <div className="space-y-1">
                 <Label>Chat Display Name</Label>
 
                 <Input
