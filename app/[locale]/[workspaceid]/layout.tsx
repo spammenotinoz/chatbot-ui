@@ -156,7 +156,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
     setModels(modelData.models)
 
     setChatSettings({
-      model: 'claude-3-haiku-20240307',
+      { model: 'process.env.DEFAULT_MODEL' || 'claude-3-haiku-20240307' },#SET Global Default from Environment Variable DEFAULT_MODEL
       prompt:
         workspace?.default_prompt ||
         "You are a friendly, helpful AI assistant.",
